@@ -1,5 +1,6 @@
 import { MinusOutlined, PlusOutlined, UndoOutlined } from '@ant-design/icons'
 import { Button, Col, Dropdown, Menu, Row } from 'antd'
+import moment from 'moment'
 import React, { ReactElement, useState } from 'react'
 import { JsxElement } from 'typescript'
 import { ChangedDealerList } from '../../changedDealerList'
@@ -24,8 +25,8 @@ interface DealerComponentProps {
 interface NewCandidateComponentProps {
 	availableCandidateList: string[];
 	idx: number;
-	setNewCandidateList: React.Dispatch<React.SetStateAction<string[]>>;
-	newCandidateList: string[];
+	setNewCandidateList: React.Dispatch<React.SetStateAction<{ name: string, date: moment.Moment }[]>>;
+	newCandidateList: { name: string, date: moment.Moment }[];
 	changedDealerList: ChangedDealerList;
 	date: moment.Moment;
 	roster: string
@@ -33,7 +34,13 @@ interface NewCandidateComponentProps {
 
 const CurrentDealerComponent = ({ selectedDealer, availableCandidateList, changedDealerList, date, roster }: DealerComponentProps) => {
 	const [isRemove, setIsRemove] = useState(false);
-	const OverlayComponent = (<AvailableCandidateMenu availableCandidateList={availableCandidateList} onClick={(e: string) => console.log(e)} />)
+	const OverlayComponent = (
+		<AvailableCandidateMenu
+			availableCandidateList={availableCandidateList}
+			onClick={(dealerName: string) => {
+				changedDealerList.addDealer(date, roster, dealerName, true)
+			}}
+		/>)
 	const removeHandler = () => {
 		setIsRemove(true)
 		changedDealerList.removeDealer(date, roster, selectedDealer, true)
@@ -69,7 +76,7 @@ const CurrentDealerComponent = ({ selectedDealer, availableCandidateList, change
 const NewCandidateComponent = ({ availableCandidateList, idx, setNewCandidateList, newCandidateList, changedDealerList, date, roster }: NewCandidateComponentProps) => {
 	const onClick = (e: string) => {
 		const cloneList = [...newCandidateList]
-		cloneList[idx] = e
+		cloneList[idx].name = e
 		setNewCandidateList(cloneList);
 		changedDealerList.addDealer(date, roster, e, true);
 	}
@@ -84,10 +91,10 @@ const NewCandidateComponent = ({ availableCandidateList, idx, setNewCandidateLis
 		<>
 			<Dropdown overlay={OverlayComponent}>
 				<Button size="small" style={{ color: 'white', backgroundColor: 'green' }}>
-					<span style={{ minWidth: 53 }}>{newCandidateList[idx]}</span>
+					<span style={{ minWidth: 53 }}>{newCandidateList[idx].name}</span>
 				</Button>
 			</Dropdown>
-			<Button size="small" type="primary" danger onClick={() => onDelete(newCandidateList[idx])}>-</Button>
+			<Button size="small" type="primary" danger onClick={() => onDelete(newCandidateList[idx].name)}>-</Button>
 		</>
 	)
 }
@@ -101,7 +108,7 @@ const AvailableCandidateMenu = ({ availableCandidateList, onClick }: { onClick: 
 )
 
 export default function TableContentCanvas({ changedDealerList, currentCandidateList, availableCandidateList, date, roster }: Props): ReactElement {
-	const [newCandidateList, setNewCandidateList] = useState<string[]>([]);
+	const [newCandidateList, setNewCandidateList] = useState<{ name: string, date: moment.Moment }[]>([]);
 	const style = {
 		dealerComponent: {
 			margin: 3
@@ -115,7 +122,7 @@ export default function TableContentCanvas({ changedDealerList, currentCandidate
 				<Col span={6}>
 					<Button
 						size="small"
-						onClick={() => { setNewCandidateList([...newCandidateList, '']) }}
+						onClick={() => { setNewCandidateList([...newCandidateList, { name: '', date }]) }}
 					>+</Button>
 				</Col>
 			</Row>
@@ -133,7 +140,7 @@ export default function TableContentCanvas({ changedDealerList, currentCandidate
 						</Col>
 					)
 				})}
-				{newCandidateList.map((_, idx) => (
+				{newCandidateList.filter(e => e.date.format('LL') === date.format('LL')).map((_, idx) => (
 					<Col style={style.dealerComponent} key={idx}>
 						<NewCandidateComponent
 							availableCandidateList={unselectedAvailableCandidateList}

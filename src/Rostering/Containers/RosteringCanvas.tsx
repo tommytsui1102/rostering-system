@@ -16,10 +16,7 @@ interface Props {
 }
 
 export default function RosteringCanvas({ candidateList, availableCandidateList, getData, dateRange }: Props): ReactElement {
-	
 	const [interval, setInterval] = useState(30);
-	
-	
 	const changedDealerList = new ChangedDealerList();
 	const columnList = [];
 	for (var i = 0; i < 24 * 60 / interval; i++) {
